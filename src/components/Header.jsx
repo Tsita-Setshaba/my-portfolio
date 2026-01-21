@@ -1,87 +1,100 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { personalInfo } from '../data/mock';
 
 const Header = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
+  }, [isMobileMenuOpen]);
+
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Features', path: '#features' },
-    { name: 'Projects', path: '#projects' },
-    { name: 'Resume', path: '#resume' },
-    { name: 'Contact', path: '#contact' }
+    { path: '/', label: 'Home' },
+    { path: '/about', label: 'About' },
+    { path: '/menu', label: 'Menu' },
+    { path: '/bar', label: 'Bar & Drinks' },
+    { path: '/liquor', label: 'Liquor Store' },
+    { path: '/events', label: 'Events' },
+    { path: '/gallery', label: 'Gallery' },
+    { path: '/contact', label: 'Contact' }
   ];
 
-  const scrollToSection = (e, path) => {
-    e.preventDefault();
-    if (path.startsWith('#')) {
-      const element = document.querySelector(path);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-        setMobileMenuOpen(false);
-      }
-    }
-  };
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#1a2332] border-b border-gray-800">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-white/95 backdrop-blur-sm'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <img
-              src={personalInfo.avatarImage}
-              alt={personalInfo.name}
-              className="w-12 h-12 rounded-full object-cover ring-2 ring-[#e91e63] ring-offset-2 ring-offset-[#1a2332] transition-transform group-hover:scale-105"
-            />
-            <div>
-              <h3 className="text-white font-semibold text-lg">{personalInfo.name}</h3>
-              <p className="text-gray-400 text-sm">{personalInfo.title}</p>
-            </div>
+          <Link to="/" className="flex items-center">
+            <h1 className="text-2xl font-bold text-black" style={{ fontFamily: "'Crimson Text', serif" }}>
+              Mamalisa
+            </h1>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          {/* Desktop Nav */}
+          <nav className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.path}
-                onClick={(e) => scrollToSection(e, link.path)}
-                className="text-gray-300 hover:text-[#e91e63] transition-colors duration-300 font-medium"
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`text-sm font-medium transition-colors duration-200 ${
+                  location.pathname === link.path
+                    ? 'text-black border-b-2 border-black pb-1'
+                    : 'text-gray-600 hover:text-black'
+                }`}
               >
-                {link.name}
-              </a>
+                {link.label}
+              </Link>
             ))}
           </nav>
+
+          {/* CTA Button */}
+          <div className="hidden lg:block">
+            <Link
+              to="/contact"
+              className="bg-black text-white px-6 py-3 rounded-md font-semibold hover:bg-gray-800 transition-all duration-200 hover:-translate-y-0.5 shadow-sm hover:shadow-md"
+            >
+              Book a Table
+            </Link>
+          </div>
 
           {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-white p-2 hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          <button className="lg:hidden text-black p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
+      </div>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden mt-4 pb-4 flex flex-col gap-3">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.path}
-                onClick={(e) => scrollToSection(e, link.path)}
-                className="text-gray-300 hover:text-[#e91e63] transition-colors duration-300 font-medium py-2"
-              >
-                {link.name}
-              </a>
-            ))}
-          </nav>
-        )}
+      {/* Mobile Menu */}
+      <div className={`lg:hidden bg-white border-t transition-all duration-300 ${isMobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+        <nav className="px-4 py-4 space-y-3">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`block py-2 text-base font-medium ${location.pathname === link.path ? 'text-black font-semibold' : 'text-gray-600'}`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Link
+            to="/contact"
+            className="block w-full text-center bg-black text-white px-6 py-3 rounded-md font-semibold mt-4"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Book a Table
+          </Link>
+        </nav>
       </div>
     </header>
   );
